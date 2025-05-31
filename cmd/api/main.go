@@ -7,6 +7,9 @@ import (
 )
 
 func main() {
+
+	config.LoadEnv()
+
 	router := server.StartServer()
 
 	if routerErr := router.Run(config.Port); routerErr != nil {
