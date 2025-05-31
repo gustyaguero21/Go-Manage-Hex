@@ -35,6 +35,10 @@ func GetMysqlDBName() string {
 	return os.Getenv("MYSQL_DB_NAME")
 }
 
+func GetMysqlTable() string {
+	return os.Getenv("MYSQL_TABLE_NAME")
+}
+
 func GetDSNRoot() string {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/", GetMysqlUser(), GetMysqlPwd(), GetMysqlDBHost(), GetMysqlDBPort())
 
