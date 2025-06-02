@@ -51,15 +51,17 @@ func (um *UserMysql) GetByName(name string) (mysqlrepo.User, error) {
 
 func (um *UserMysql) NewUser(user mysqlrepo.User) error {
 	query := fmt.Sprintf(config.NewUserQuery, config.GetMysqlTable())
+
 	_, err := um.DB.Exec(query, user.ID, user.Name, user.LastName, user.Username, user.Email, user.Password)
 	if err != nil {
-		return fmt.Errorf("error creating user. Error: %s", err)
+		return err
 	}
 	return nil
 }
 
 func (um *UserMysql) DeleteUser(name string) error {
 	query := fmt.Sprintf(config.DeleteQuery, config.GetMysqlTable())
+
 	_, err := um.DB.Exec(query, name)
 	if err != nil {
 		return err
@@ -71,6 +73,16 @@ func (um *UserMysql) UpdateUser(name string, user mysqlrepo.User) error {
 	query := fmt.Sprintf(config.UpdateQuery, config.GetMysqlTable())
 
 	_, err := um.DB.Exec(query, user.Name, user.LastName, user.Email, name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (um *UserMysql) ChangePwd(newPwd, name string) error {
+	query := fmt.Sprintf(config.ChangePwdQuery, config.GetMysqlTable())
+
+	_, err := um.DB.Exec(query, newPwd, name)
 	if err != nil {
 		return err
 	}

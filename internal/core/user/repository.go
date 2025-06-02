@@ -6,4 +6,5 @@ type MysqlRepository interface {
 	NewUser(user User) error
 	DeleteUser(name string) error
 	UpdateUser(name string, user User) error
+	ChangePwd(newPwd, name string) error
 }
