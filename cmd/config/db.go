@@ -21,4 +21,5 @@ const (
 	NewUserQuery     = "INSERT INTO %s (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
 	DeleteQuery      = "DELETE FROM %s WHERE name = ?"
 	UpdateQuery      = "UPDATE %s SET name = ?, last_name = ?, email = ? WHERE name = ?"
+	ChangePwdQuery   = "UPDATE %s SET password = ? WHERE name = ?"
 )

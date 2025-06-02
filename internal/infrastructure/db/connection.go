@@ -15,8 +15,6 @@ func DatabaseConn() (*sql.DB, error) {
 		return nil, err
 	}
 
-	defer tempDB.Close()
-
 	if pingErr := tempDB.Ping(); pingErr != nil {
 		log.Fatal("error pinging to database")
 	}
