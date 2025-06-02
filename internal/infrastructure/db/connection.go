@@ -44,8 +44,8 @@ func DatabaseConn() (*sql.DB, error) {
 
 func checkExists(db *sql.DB, dbName string) error {
 	var exists string
-	rows := db.QueryRow(config.CheckDBQuery, dbName).Scan(&exists)
-	if rows == sql.ErrNoRows {
+	err := db.QueryRow(config.CheckDBQuery, dbName).Scan(&exists)
+	if err == sql.ErrNoRows {
 		return fmt.Errorf("database not found")
 	}
 	return nil

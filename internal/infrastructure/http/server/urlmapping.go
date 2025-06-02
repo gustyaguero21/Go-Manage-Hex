@@ -1,7 +1,9 @@
 package server
 
 import (
+	"go-manage-hex/cmd/config"
 	"go-manage-hex/internal/infrastructure/db"
+
 	"log"
 	"net/http"
 
@@ -15,7 +17,7 @@ func UrlMapping(s *gin.Engine) {
 		log.Fatal(err)
 	}
 
-	api := s.Group("/api/go-manage-hex")
+	api := s.Group(config.BaseURL)
 
 	api.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
