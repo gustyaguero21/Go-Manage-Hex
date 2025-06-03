@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"go-manage-hex/cmd/config"
 	mysqlrepo "go-manage-hex/internal/core/user"
 	"testing"
 
@@ -33,7 +34,7 @@ func TestGetByName(t *testing.T) {
 			MockFunc: func(u mysqlrepo.User) {
 				rows := sqlmock.NewRows([]string{"id", "name", "last_name", "username", "email", "password"}).
 					AddRow(u.ID, u.Name, u.LastName, u.Username, u.Email, u.Password)
-				mock.ExpectQuery("SELECT id,name,last_name,username,email,password FROM  WHERE name = ?").
+				mock.ExpectQuery(config.SelectTest).
 					WithArgs("John").WillReturnRows(rows)
 			},
 		},
@@ -43,7 +44,7 @@ func TestGetByName(t *testing.T) {
 			ExpectedUser: mysqlrepo.User{},
 			ExpectedErr:  sql.ErrNoRows,
 			MockFunc: func(u mysqlrepo.User) {
-				mock.ExpectQuery("SELECT id,name,last_name,username,email,password FROM  WHERE name = ?").
+				mock.ExpectQuery(config.SelectTest).
 					WithArgs("John").WillReturnError(err)
 			},
 		},
@@ -53,7 +54,7 @@ func TestGetByName(t *testing.T) {
 			ExpectedUser: mysqlrepo.User{},
 			ExpectedErr:  sql.ErrNoRows,
 			MockFunc: func(u mysqlrepo.User) {
-				mock.ExpectQuery("SELECT id,name,last_name,username,email,password FROM  WHERE name = ?").
+				mock.ExpectQuery(config.SelectTest).
 					WithArgs("John").WillReturnError(sql.ErrNoRows)
 			},
 		},

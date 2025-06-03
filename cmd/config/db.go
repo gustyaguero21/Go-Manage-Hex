@@ -23,3 +23,8 @@ const (
 	UpdateQuery      = "UPDATE %s SET name = ?, last_name = ?, email = ? WHERE name = ?"
 	ChangePwdQuery   = "UPDATE %s SET password = ? WHERE name = ?"
 )
+
+// mysql test queries
+const (
+	SelectTest = "SELECT id,name,last_name,username,email,password FROM  WHERE name = ?"
+)
