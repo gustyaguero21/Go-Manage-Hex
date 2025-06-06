@@ -20,7 +20,7 @@ func (um *UserMysql) CreateTable(tableName string) error {
 
 	_, err := um.DB.Exec(query)
 	if err != nil {
-		return fmt.Errorf("error creating table. Error: %s", err)
+		return err
 	}
 	return nil
 }

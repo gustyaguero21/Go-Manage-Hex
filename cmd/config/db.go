@@ -23,3 +23,13 @@ const (
 	UpdateQuery      = "UPDATE %s SET name = ?, last_name = ?, email = ? WHERE name = ?"
 	ChangePwdQuery   = "UPDATE %s SET password = ? WHERE name = ?"
 )
+
+// mysql test queries
+const (
+	CreateTableTest = "CREATE TABLE IF NOT EXISTS table_name (id VARCHAR(36) UNIQUE NOT NULL PRIMARY KEY, name VARCHAR(36) NOT NULL, last_name VARCHAR(36) NOT NULL, username VARCHAR(36) UNIQUE NOT NULL, email VARCHAR(36) UNIQUE NOT NULL, password VARCHAR(36) NOT NULL)"
+	GetByNameTest   = "SELECT id,name,last_name,username,email,password FROM  WHERE name = ?"
+	NewUserTest     = "INSERT INTO  (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
+	DeleteUserTest  = "DELETE FROM WHERE name = ?"
+	UpdateUserTest  = "UPDATE SET name = ?, last_name = ?, email = ? WHERE name = ?"
+	ChangePwdTest   = "UPDATE SET password = ? WHERE name = ?"
+)
