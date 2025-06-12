@@ -88,3 +88,12 @@ func (um *UserMysql) ChangePwd(newPwd, username string) error {
 	}
 	return nil
 }
+
+func (um *UserMysql) CheckExists(username string) bool {
+	query := fmt.Sprintf(config.CheckExistsQuery, config.GetMysqlTable())
+
+	var exists string
+
+	return um.DB.QueryRow(query, username).Scan(&exists) == nil
+
+}

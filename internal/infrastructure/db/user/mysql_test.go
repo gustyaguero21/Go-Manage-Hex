@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"fmt"
 	"go-manage-hex/cmd/config"
 	mysqlrepo "go-manage-hex/internal/core/user"
 	"regexp"
@@ -349,6 +350,55 @@ func TestChangePwd(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestCheckExists(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	repo := NewUserMysql(db)
+
+	test := []struct {
+		Name           string
+		Username       string
+		ExpectedResult bool
+		MockFunc       func()
+	}{
+		{
+			Name:           "CheckExists_Success",
+			Username:       "johndoe",
+			ExpectedResult: true,
+			MockFunc: func() {
+				query := fmt.Sprintf(config.CheckExistsTest, config.GetMysqlTable())
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs("johndoe").
+					WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+			},
+		},
+		{
+			Name:           "CheckExists_Err",
+			Username:       "johndoe",
+			ExpectedResult: false,
+			MockFunc: func() {
+				query := fmt.Sprintf(config.CheckExistsTest, config.GetMysqlTable())
+				mock.ExpectQuery(query).
+					WithArgs("johndoe").WillReturnRows(&sqlmock.Rows{})
+			},
+		},
+	}
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			tt.MockFunc()
+
+			result := repo.CheckExists(tt.Username)
+
+			assert.Equal(t, result, tt.ExpectedResult)
 		})
 	}
 }
