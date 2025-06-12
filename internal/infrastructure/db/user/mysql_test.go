@@ -58,7 +58,7 @@ func TestCreateTable(t *testing.T) {
 	}
 }
 
-func TestGetByName(t *testing.T) {
+func TestGetByUsername(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
@@ -75,34 +75,34 @@ func TestGetByName(t *testing.T) {
 		MockFunc     func(u mysqlrepo.User)
 	}{
 		{
-			Name:         "GetByName_Success",
+			Name:         "GetByUsername_Success",
 			SearchName:   "John",
 			ExpectedUser: mysqlrepo.User{},
 			ExpectedErr:  nil,
 			MockFunc: func(u mysqlrepo.User) {
 				rows := sqlmock.NewRows([]string{"id", "name", "last_name", "username", "email", "password"}).
 					AddRow(u.ID, u.Name, u.LastName, u.Username, u.Email, u.Password)
-				mock.ExpectQuery(config.GetByNameTest).
+				mock.ExpectQuery(config.GetByUsernameTest).
 					WithArgs("John").WillReturnRows(rows)
 			},
 		},
 		{
-			Name:         "GetByName_Err",
+			Name:         "GetByUsername_Err",
 			SearchName:   "John",
 			ExpectedUser: mysqlrepo.User{},
 			ExpectedErr:  sql.ErrNoRows,
 			MockFunc: func(u mysqlrepo.User) {
-				mock.ExpectQuery(config.GetByNameTest).
+				mock.ExpectQuery(config.GetByUsernameTest).
 					WithArgs("John").WillReturnError(err)
 			},
 		},
 		{
-			Name:         "GetByName_NoRows",
+			Name:         "GetByUsername_NoRows",
 			SearchName:   "John",
 			ExpectedUser: mysqlrepo.User{},
 			ExpectedErr:  sql.ErrNoRows,
 			MockFunc: func(u mysqlrepo.User) {
-				mock.ExpectQuery(config.GetByNameTest).
+				mock.ExpectQuery(config.GetByUsernameTest).
 					WithArgs("John").WillReturnError(sql.ErrNoRows)
 			},
 		},
@@ -112,7 +112,7 @@ func TestGetByName(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			tt.MockFunc(tt.ExpectedUser)
 
-			result, err := repo.GetByName(tt.SearchName)
+			result, err := repo.GetByUsername(tt.SearchName)
 			if tt.ExpectedErr != nil {
 				assert.Error(t, err)
 			} else {
@@ -204,21 +204,21 @@ func TestDeleteUser(t *testing.T) {
 	}{
 		{
 			Name:        "DeleteUser_Success",
-			DeleteUser:  "John",
+			DeleteUser:  "johndoe",
 			ExpectedErr: nil,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.DeleteUserTest)).
-					WithArgs("John").
+					WithArgs("johndoe").
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 		},
 		{
 			Name:        "DeleteUser_Err",
-			DeleteUser:  "John",
+			DeleteUser:  "johndoe",
 			ExpectedErr: err,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.DeleteUserTest)).
-					WithArgs("John").
+					WithArgs("johndoe").
 					WillReturnError(err)
 			},
 		},
@@ -265,18 +265,18 @@ func TestUpdateUser(t *testing.T) {
 				Email:    "johndoe@example.com",
 				Password: "Password1234.",
 			},
-			Update:      "John",
+			Update:      "johndoe",
 			ExpectedErr: nil,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.UpdateUserTest)).
-					WithArgs("John", "Doe", "johndoe@example.com", "John").
+					WithArgs("John", "Doe", "johndoe@example.com", "johndoe").
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 		},
 		{
 			Name:        "UpdateUser_Err",
 			UpdateUser:  mysqlrepo.User{},
-			Update:      "John",
+			Update:      "johndoe",
 			ExpectedErr: err,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.UpdateUserTest)).
@@ -310,28 +310,28 @@ func TestChangePwd(t *testing.T) {
 	repo := NewUserMysql(db)
 
 	test := []struct {
-		Name               string
-		ChangePwdUser_name string
-		NewPwd             string
-		ExpectedErr        error
-		MockFunc           func()
+		Name              string
+		ChangePwdUsername string
+		NewPwd            string
+		ExpectedErr       error
+		MockFunc          func()
 	}{
 		{
-			Name:               "ChangePwd_Success",
-			ChangePwdUser_name: "John",
-			NewPwd:             "NewPassword",
-			ExpectedErr:        nil,
+			Name:              "ChangePwd_Success",
+			ChangePwdUsername: "johndoe",
+			NewPwd:            "NewPassword",
+			ExpectedErr:       nil,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.ChangePwdTest)).
-					WithArgs("NewPassword", "John").
+					WithArgs("NewPassword", "johndoe").
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 		},
 		{
-			Name:               "ChangePwd_Err",
-			ChangePwdUser_name: "John",
-			NewPwd:             "NewPassword",
-			ExpectedErr:        err,
+			Name:              "ChangePwd_Err",
+			ChangePwdUsername: "johndoe",
+			NewPwd:            "NewPassword",
+			ExpectedErr:       err,
 			MockFunc: func() {
 				mock.ExpectExec(regexp.QuoteMeta(config.ChangePwdTest)).
 					WillReturnError(err)
@@ -343,7 +343,7 @@ func TestChangePwd(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			tt.MockFunc()
 
-			err := repo.ChangePwd(tt.NewPwd, tt.ChangePwdUser_name)
+			err := repo.ChangePwd(tt.NewPwd, tt.ChangePwdUsername)
 			if err != nil {
 				assert.Error(t, err)
 			} else {
