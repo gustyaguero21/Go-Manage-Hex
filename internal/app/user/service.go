@@ -26,7 +26,7 @@ func (us *UserServices) SearchUser(ctx context.Context, username string) (search
 
 	search, searchErr := us.Repo.GetByUsername(username)
 	if searchErr != nil {
-		return mysqlUser.User{}, searchErr
+		return mysqlUser.User{}, fmt.Errorf("error searching user. Error: %s", searchErr)
 	}
 
 	return search, nil
