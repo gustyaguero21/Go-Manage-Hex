@@ -72,16 +72,16 @@ func TestSearchUser(t *testing.T) {
 	test := []struct {
 		Name         string
 		Username     string
-		mockExists   bool
-		mockUser     entity.User
-		mockGetErr   error
+		MockExists   bool
+		MockUser     entity.User
+		MockGetErr   error
 		expectedUser entity.User
 	}{
 		{
 			Name:       "SearchUser_Success",
 			Username:   "johndoe",
-			mockExists: true,
-			mockUser: entity.User{
+			MockExists: true,
+			MockUser: entity.User{
 				ID:       "1",
 				Name:     "John",
 				LastName: "Doe",
@@ -93,16 +93,16 @@ func TestSearchUser(t *testing.T) {
 		{
 			Name:       "SearchUser_NotFound",
 			Username:   "johncito",
-			mockExists: false,
-			mockUser:   entity.User{},
-			mockGetErr: fmt.Errorf("user not found"),
+			MockExists: false,
+			MockUser:   entity.User{},
+			MockGetErr: fmt.Errorf("user not found"),
 		},
 		{
 			Name:       "SearchUser_Error",
 			Username:   "johncito",
-			mockExists: true,
-			mockUser:   entity.User{},
-			mockGetErr: fmt.Errorf("error searching user. Error: "),
+			MockExists: true,
+			MockUser:   entity.User{},
+			MockGetErr: fmt.Errorf("error searching user. Error: "),
 		},
 	}
 
@@ -110,10 +110,10 @@ func TestSearchUser(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			mockRepo := mockMysqlRepository{
 				CheckExistsFn: func(username string) bool {
-					return tt.mockExists
+					return tt.MockExists
 				},
 				GetByUsernameFn: func(username string) (entity.User, error) {
-					return tt.mockUser, tt.mockGetErr
+					return tt.MockUser, tt.MockGetErr
 				},
 			}
 			service := NewUserService(&mockRepo)
@@ -137,14 +137,14 @@ func TestSearchUser(t *testing.T) {
 func TestCreateUser(t *testing.T) {
 	test := []struct {
 		Name        string
-		mockExists  bool
-		mockGetErr  error
+		MockExists  bool
+		MockGetErr  error
 		User        entity.User
-		expectedErr error
+		ExpectedErr error
 	}{
 		{
 			Name:       "CreateUser_Success",
-			mockExists: false,
+			MockExists: false,
 			User: entity.User{
 				Name:     "John",
 				LastName: "Doe",
@@ -152,21 +152,21 @@ func TestCreateUser(t *testing.T) {
 				Email:    "johndoe@example.com",
 				Password: "Password1234567",
 			},
-			expectedErr: nil,
+			ExpectedErr: nil,
 		},
 		{
 			Name:        "CreateUser_ErrUserAlreadyExists",
-			mockExists:  true,
-			expectedErr: fmt.Errorf("user already exists"),
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("user already exists"),
 		},
 		{
 			Name:        "CreateUser_ErrInvalidEmail",
-			mockExists:  false,
-			expectedErr: fmt.Errorf("invalid email address"),
+			MockExists:  false,
+			ExpectedErr: fmt.Errorf("invalid email address"),
 		},
 		{
 			Name:       "CreateUser_ErrInvalidPassword",
-			mockExists: false,
+			MockExists: false,
 			User: entity.User{
 				Name:     "John",
 				LastName: "Doe",
@@ -174,11 +174,11 @@ func TestCreateUser(t *testing.T) {
 				Email:    "johndoe@example.com",
 				Password: "Password1234567.",
 			},
-			expectedErr: fmt.Errorf("invalid password"),
+			ExpectedErr: fmt.Errorf("invalid password"),
 		},
 		{
 			Name:       "CreateUser_Err",
-			mockExists: false,
+			MockExists: false,
 			User: entity.User{
 				Name:     "John",
 				LastName: "Doe",
@@ -186,7 +186,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "johndoe@example.com",
 				Password: "Password1234567",
 			},
-			expectedErr: fmt.Errorf("error creating user. Error: some db error"),
+			ExpectedErr: fmt.Errorf("error creating user. Error: some db error"),
 		},
 	}
 
@@ -194,10 +194,10 @@ func TestCreateUser(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			mockRepo := mockMysqlRepository{
 				CheckExistsFn: func(username string) bool {
-					return tt.mockExists
+					return tt.MockExists
 				},
 				NewUserFn: func(user entity.User) error {
-					return tt.expectedErr
+					return tt.ExpectedErr
 				},
 			}
 			service := NewUserService(&mockRepo)
@@ -207,8 +207,189 @@ func TestCreateUser(t *testing.T) {
 			if err != nil {
 				assert.Error(t, err)
 			} else {
+
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	test := []struct {
+		Name        string
+		Username    string
+		MockExists  bool
+		ExpectedErr error
+	}{
+		{
+			Name:        "DeleteUser_Success",
+			Username:    "johndoe",
+			MockExists:  true,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "DeleteUser_ErrUserNotFound",
+			Username:    "johndoe",
+			MockExists:  false,
+			ExpectedErr: fmt.Errorf("user not found"),
+		},
+		{
+			Name:        "DeleteUser_Err",
+			Username:    "johndoe",
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("error deleting user. Error: some error"),
+		},
+	}
+
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			repo := mockMysqlRepository{
+				CheckExistsFn: func(username string) bool {
+					return tt.MockExists
+				},
+				DeleteUserFn: func(username string) error {
+					return tt.ExpectedErr
+				},
+			}
+
+			service := NewUserService(&repo)
+
+			deleteErr := service.DeleteUser(context.Background(), tt.Username)
+
+			if deleteErr != nil {
+				assert.Error(t, deleteErr)
+			} else {
+				assert.NoError(t, deleteErr)
+			}
+		})
+	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	test := []struct {
+		Name        string
+		Username    string
+		User        entity.User
+		MockExists  bool
+		ExpectedErr error
+	}{
+		{
+			Name:     "UpdateUser_Success",
+			Username: "johndoe",
+			User: entity.User{
+				Name:     "Johncito",
+				LastName: "Doecito",
+				Email:    "johncitodoecito@example.com",
+			},
+			MockExists:  true,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "UpdateUser_ErrUserNotFound",
+			Username:    "johndoe",
+			MockExists:  false,
+			ExpectedErr: fmt.Errorf("user not found"),
+		},
+		{
+			Name:     "UpdateUser_ErrInvalidEmail",
+			Username: "johndoe",
+			User: entity.User{
+				Email: "not-an-email",
+			},
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("invalid email address"),
+		},
+		{
+			Name:     "UpdateUser_Err",
+			Username: "johndoe",
+			User: entity.User{
+				Email: "john@example.com",
+			},
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("error updating user. Error: some error"),
+		},
+	}
+
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			repo := mockMysqlRepository{
+				CheckExistsFn: func(username string) bool {
+					return tt.MockExists
+				},
+				UpdateUserFn: func(username string, user entity.User) error {
+					return tt.ExpectedErr
+				},
+			}
+			service := NewUserService(&repo)
+
+			_, err := service.UpdateUser(context.Background(), tt.Username, tt.User)
+
+			if tt.ExpectedErr != nil {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestChangeUserPwd(t *testing.T) {
+	test := []struct {
+		Name        string
+		NewPwd      string
+		Username    string
+		MockExists  bool
+		ExpectedErr error
+	}{
+		{
+			Name:        "ChangeUserPwd_Success",
+			NewPwd:      "NewPassword1234",
+			Username:    "johndoe",
+			MockExists:  true,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "ChangeUserPwd_ErrUserNotFound",
+			NewPwd:      "NewPassword1234",
+			Username:    "johndoe",
+			MockExists:  false,
+			ExpectedErr: fmt.Errorf("user not found"),
+		},
+		{
+			Name:        "ChangeUserPwd_ErrInvalidPassword",
+			NewPwd:      "NewPassword1234.",
+			Username:    "johndoe",
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("invalid password"),
+		},
+		{
+			Name:        "ChangeUserPwd_Err",
+			NewPwd:      "NewPassword1234",
+			Username:    "johndoe",
+			MockExists:  true,
+			ExpectedErr: fmt.Errorf("error changing password. Error: some error"),
+		},
+	}
+
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			repo := mockMysqlRepository{
+				CheckExistsFn: func(username string) bool {
+					return tt.MockExists
+				},
+				ChangePwdFn: func(newPwd, username string) error {
+					return tt.ExpectedErr
+				},
+			}
+			service := NewUserService(&repo)
+
+			err := service.ChangeUserPwd(context.Background(), tt.NewPwd, tt.Username)
+			if err != nil {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
 		})
 	}
 }
