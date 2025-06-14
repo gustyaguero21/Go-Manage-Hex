@@ -17,6 +17,7 @@ var (
 
 const (
 	CreateTableQuery   = "CREATE TABLE IF NOT EXISTS %s (id VARCHAR(36) UNIQUE NOT NULL PRIMARY KEY, name VARCHAR(36) NOT NULL, last_name VARCHAR(36) NOT NULL, username VARCHAR(36) UNIQUE NOT NULL, email VARCHAR(36) UNIQUE NOT NULL, password VARCHAR(100) NOT NULL)"
+	CheckExistsQuery   = "SELECT 1 FROM %s WHERE username = ? LIMIT 1"
 	GetByUsernameQuery = "SELECT id,name,last_name,username,email,password FROM %s WHERE username = ?"
 	NewUserQuery       = "INSERT INTO %s (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
 	DeleteQuery        = "DELETE FROM %s WHERE username = ?"
@@ -27,6 +28,7 @@ const (
 // mysql test queries
 const (
 	CreateTableTest   = "CREATE TABLE IF NOT EXISTS table_name (id VARCHAR(36) UNIQUE NOT NULL PRIMARY KEY, name VARCHAR(36) NOT NULL, last_name VARCHAR(36) NOT NULL, username VARCHAR(36) UNIQUE NOT NULL, email VARCHAR(36) UNIQUE NOT NULL, password VARCHAR(100) NOT NULL)"
+	CheckExistsTest   = "SELECT 1 FROM %s WHERE username = ? LIMIT 1"
 	GetByUsernameTest = "SELECT id,name,last_name,username,email,password FROM  WHERE username = ?"
 	NewUserTest       = "INSERT INTO  (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
 	DeleteUserTest    = "DELETE FROM WHERE username = ?"
