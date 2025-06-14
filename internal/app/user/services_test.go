@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"go-manage-hex/cmd/config"
 	entity "go-manage-hex/internal/core/user"
 	"testing"
 
@@ -95,7 +96,7 @@ func TestSearchUser(t *testing.T) {
 			Username:   "johncito",
 			MockExists: false,
 			MockUser:   entity.User{},
-			MockGetErr: fmt.Errorf("user not found"),
+			MockGetErr: config.ErrUserNotFound,
 		},
 		{
 			Name:       "SearchUser_Error",
@@ -157,12 +158,12 @@ func TestCreateUser(t *testing.T) {
 		{
 			Name:        "CreateUser_ErrUserAlreadyExists",
 			MockExists:  true,
-			ExpectedErr: fmt.Errorf("user already exists"),
+			ExpectedErr: config.ErrUserAlreadyExists,
 		},
 		{
 			Name:        "CreateUser_ErrInvalidEmail",
 			MockExists:  false,
-			ExpectedErr: fmt.Errorf("invalid email address"),
+			ExpectedErr: config.ErrInvalidEmail,
 		},
 		{
 			Name:       "CreateUser_ErrInvalidPassword",
@@ -174,7 +175,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "johndoe@example.com",
 				Password: "Password1234567.",
 			},
-			ExpectedErr: fmt.Errorf("invalid password"),
+			ExpectedErr: config.ErrInvalidPassword,
 		},
 		{
 			Name:       "CreateUser_Err",
@@ -231,7 +232,7 @@ func TestDeleteUser(t *testing.T) {
 			Name:        "DeleteUser_ErrUserNotFound",
 			Username:    "johndoe",
 			MockExists:  false,
-			ExpectedErr: fmt.Errorf("user not found"),
+			ExpectedErr: config.ErrUserNotFound,
 		},
 		{
 			Name:        "DeleteUser_Err",
@@ -288,7 +289,7 @@ func TestUpdateUser(t *testing.T) {
 			Name:        "UpdateUser_ErrUserNotFound",
 			Username:    "johndoe",
 			MockExists:  false,
-			ExpectedErr: fmt.Errorf("user not found"),
+			ExpectedErr: config.ErrUserNotFound,
 		},
 		{
 			Name:     "UpdateUser_ErrInvalidEmail",
@@ -297,7 +298,7 @@ func TestUpdateUser(t *testing.T) {
 				Email: "not-an-email",
 			},
 			MockExists:  true,
-			ExpectedErr: fmt.Errorf("invalid email address"),
+			ExpectedErr: config.ErrInvalidEmail,
 		},
 		{
 			Name:     "UpdateUser_Err",
@@ -353,14 +354,14 @@ func TestChangeUserPwd(t *testing.T) {
 			NewPwd:      "NewPassword1234",
 			Username:    "johndoe",
 			MockExists:  false,
-			ExpectedErr: fmt.Errorf("user not found"),
+			ExpectedErr: config.ErrUserNotFound,
 		},
 		{
 			Name:        "ChangeUserPwd_ErrInvalidPassword",
 			NewPwd:      "NewPassword1234.",
 			Username:    "johndoe",
 			MockExists:  true,
-			ExpectedErr: fmt.Errorf("invalid password"),
+			ExpectedErr: config.ErrInvalidPassword,
 		},
 		{
 			Name:        "ChangeUserPwd_Err",

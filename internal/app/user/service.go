@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go-manage-hex/cmd/config"
 	mysqlUser "go-manage-hex/internal/core/user"
 
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ func NewUserService(repo mysqlUser.MysqlRepository) Usecases {
 
 func (us *UserServices) SearchUser(ctx context.Context, username string) (search mysqlUser.User, err error) {
 	if !us.Repo.CheckExists(username) {
-		return mysqlUser.User{}, fmt.Errorf("user not found")
+		return mysqlUser.User{}, config.ErrUserNotFound
 	}
 
 	search, searchErr := us.Repo.GetByUsername(username)
@@ -34,17 +35,17 @@ func (us *UserServices) SearchUser(ctx context.Context, username string) (search
 
 func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (created mysqlUser.User, err error) {
 	if us.Repo.CheckExists(user.Username) {
-		return mysqlUser.User{}, fmt.Errorf("user already exists")
+		return mysqlUser.User{}, config.ErrUserAlreadyExists
 	}
 
 	uID := uuid.NewString()
 
 	if !validator.ValidateEmail(user.Email) {
-		return mysqlUser.User{}, fmt.Errorf("invalid email address")
+		return mysqlUser.User{}, config.ErrInvalidEmail
 	}
 
 	if !validator.ValidatePassword(user.Password) {
-		return mysqlUser.User{}, fmt.Errorf("invalid password")
+		return mysqlUser.User{}, config.ErrInvalidPassword
 	}
 
 	hash, hashErr := encrypter.PasswordEncrypter(user.Password)
@@ -64,7 +65,7 @@ func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (cr
 
 func (us *UserServices) DeleteUser(ctx context.Context, username string) error {
 	if !us.Repo.CheckExists(username) {
-		return fmt.Errorf("user not found")
+		return config.ErrUserNotFound
 	}
 
 	if deleteErr := us.Repo.DeleteUser(username); deleteErr != nil {
@@ -76,11 +77,11 @@ func (us *UserServices) DeleteUser(ctx context.Context, username string) error {
 
 func (us *UserServices) UpdateUser(ctx context.Context, username string, user mysqlUser.User) (updated mysqlUser.User, err error) {
 	if !us.Repo.CheckExists(username) {
-		return mysqlUser.User{}, fmt.Errorf("user not found")
+		return mysqlUser.User{}, config.ErrUserNotFound
 	}
 
 	if !validator.ValidateEmail(user.Email) {
-		return mysqlUser.User{}, fmt.Errorf("invalid email address")
+		return mysqlUser.User{}, config.ErrInvalidEmail
 	}
 
 	if updateErr := us.Repo.UpdateUser(username, user); updateErr != nil {
@@ -92,11 +93,11 @@ func (us *UserServices) UpdateUser(ctx context.Context, username string, user my
 
 func (us *UserServices) ChangeUserPwd(ctx context.Context, newPwd, username string) error {
 	if !us.Repo.CheckExists(username) {
-		return fmt.Errorf("user not found")
+		return config.ErrUserNotFound
 	}
 
 	if !validator.ValidatePassword(newPwd) {
-		return fmt.Errorf("invalid password")
+		return config.ErrInvalidPassword
 	}
 
 	if changePwd := us.Repo.ChangePwd(newPwd, username); changePwd != nil {
