@@ -39,11 +39,8 @@ func (um *UserMysql) GetByUsername(username string) (mysqlrepo.User, error) {
 		&user.Password,
 	)
 
-	if err == sql.ErrNoRows {
-		return mysqlrepo.User{}, sql.ErrNoRows
-	}
 	if err != nil {
-		return mysqlrepo.User{}, err
+		return mysqlrepo.User{}, config.ErrUserNotFound
 	}
 
 	return user, nil

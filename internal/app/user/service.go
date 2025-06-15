@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"go-manage-hex/cmd/config"
 	mysqlUser "go-manage-hex/internal/core/user"
 
 	"github.com/google/uuid"
+	"github.com/gustyaguero21/go-core/pkg/apperror"
 	"github.com/gustyaguero21/go-core/pkg/encrypter"
 	"github.com/gustyaguero21/go-core/pkg/validator"
 )
@@ -22,12 +22,12 @@ func NewUserService(repo mysqlUser.MysqlRepository) Usecases {
 
 func (us *UserServices) SearchUser(ctx context.Context, username string) (search mysqlUser.User, err error) {
 	if !us.Repo.CheckExists(username) {
-		return mysqlUser.User{}, config.ErrUserNotFound
+		return mysqlUser.User{}, apperror.AppError(config.ErrSearchingUser, config.ErrUserNotFound)
 	}
 
 	search, searchErr := us.Repo.GetByUsername(username)
 	if searchErr != nil {
-		return mysqlUser.User{}, fmt.Errorf("error searching user. Error: %s", searchErr)
+		return mysqlUser.User{}, apperror.AppError(config.ErrSearchingUser, searchErr)
 	}
 
 	return search, nil
@@ -35,17 +35,17 @@ func (us *UserServices) SearchUser(ctx context.Context, username string) (search
 
 func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (created mysqlUser.User, err error) {
 	if us.Repo.CheckExists(user.Username) {
-		return mysqlUser.User{}, config.ErrUserAlreadyExists
+		return mysqlUser.User{}, apperror.AppError(config.ErrCreatingUser, config.ErrUserAlreadyExists)
 	}
 
 	uID := uuid.NewString()
 
 	if !validator.ValidateEmail(user.Email) {
-		return mysqlUser.User{}, config.ErrInvalidEmail
+		return mysqlUser.User{}, apperror.AppError(config.ErrCreatingUser, config.ErrInvalidEmail)
 	}
 
 	if !validator.ValidatePassword(user.Password) {
-		return mysqlUser.User{}, config.ErrInvalidPassword
+		return mysqlUser.User{}, apperror.AppError(config.ErrCreatingUser, config.ErrInvalidPassword)
 	}
 
 	hash, hashErr := encrypter.PasswordEncrypter(user.Password)
@@ -57,7 +57,7 @@ func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (cr
 	user.Password = string(hash)
 
 	if createErr := us.Repo.NewUser(user); createErr != nil {
-		return mysqlUser.User{}, fmt.Errorf("error creating user. Error: %s", createErr)
+		return mysqlUser.User{}, apperror.AppError(config.ErrCreatingUser, createErr)
 	}
 
 	return user, nil
@@ -65,11 +65,11 @@ func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (cr
 
 func (us *UserServices) DeleteUser(ctx context.Context, username string) error {
 	if !us.Repo.CheckExists(username) {
-		return config.ErrUserNotFound
+		return apperror.AppError(config.ErrDeletingUser, config.ErrUserNotFound)
 	}
 
 	if deleteErr := us.Repo.DeleteUser(username); deleteErr != nil {
-		return fmt.Errorf("error deleting user. Error: %s", deleteErr)
+		return apperror.AppError(config.ErrDeletingUser, deleteErr)
 	}
 
 	return nil
@@ -77,15 +77,15 @@ func (us *UserServices) DeleteUser(ctx context.Context, username string) error {
 
 func (us *UserServices) UpdateUser(ctx context.Context, username string, user mysqlUser.User) (updated mysqlUser.User, err error) {
 	if !us.Repo.CheckExists(username) {
-		return mysqlUser.User{}, config.ErrUserNotFound
+		return mysqlUser.User{}, apperror.AppError(config.ErrUpdatingUser, config.ErrUserNotFound)
 	}
 
 	if !validator.ValidateEmail(user.Email) {
-		return mysqlUser.User{}, config.ErrInvalidEmail
+		return mysqlUser.User{}, apperror.AppError(config.ErrUpdatingUser, config.ErrInvalidEmail)
 	}
 
 	if updateErr := us.Repo.UpdateUser(username, user); updateErr != nil {
-		return mysqlUser.User{}, fmt.Errorf("error updating user. Error: %s", updateErr)
+		return mysqlUser.User{}, apperror.AppError(config.ErrUpdatingUser, updateErr)
 	}
 
 	return user, nil
@@ -93,15 +93,15 @@ func (us *UserServices) UpdateUser(ctx context.Context, username string, user my
 
 func (us *UserServices) ChangeUserPwd(ctx context.Context, newPwd, username string) error {
 	if !us.Repo.CheckExists(username) {
-		return config.ErrUserNotFound
+		return apperror.AppError(config.ErrChangingPwd, config.ErrUserNotFound)
 	}
 
 	if !validator.ValidatePassword(newPwd) {
-		return config.ErrInvalidPassword
+		return apperror.AppError(config.ErrChangingPwd, config.ErrInvalidPassword)
 	}
 
-	if changePwd := us.Repo.ChangePwd(newPwd, username); changePwd != nil {
-		return fmt.Errorf("error changing password. Error: %s", changePwd)
+	if changePwdErr := us.Repo.ChangePwd(newPwd, username); changePwdErr != nil {
+		return apperror.AppError(config.ErrChangingPwd, changePwdErr)
 	}
 
 	return nil
