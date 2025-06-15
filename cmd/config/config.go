@@ -26,11 +26,6 @@ var (
 	ErrUserAlreadyExists = fmt.Errorf("user already exists")
 )
 
-// handler errors
-var (
-	ErrInvalidQueryParam = "invalid query param"
-)
-
 //handler messages
 
 const (
@@ -41,4 +36,6 @@ const (
 	InvalidConfirmationMsg = "invalid confirmation value"
 	DeleteCancelledMsg     = "delete operation canceled"
 	UserDeletedMsg         = "user deleted successfully"
+	UserUpdatedMsg         = "user updated succesfully"
+	UserPwdChangeMsg       = "password changed successfully"
 )

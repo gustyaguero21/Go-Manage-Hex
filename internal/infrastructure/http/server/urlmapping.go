@@ -41,4 +41,9 @@ func UrlMapping(s *gin.Engine) {
 	api.POST("/create", userHandler.CreateUserHandler)
 
 	api.DELETE("/delete", userHandler.DeleteUserHandler)
+
+	api.PATCH("/update", userHandler.UpdateUserHandler)
+
+	api.PATCH("/change-password", userHandler.ChangePwdHandler)
+
 }

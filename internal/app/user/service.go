@@ -48,10 +48,7 @@ func (us *UserServices) CreateUser(ctx context.Context, user mysqlUser.User) (cr
 		return mysqlUser.User{}, apperror.AppError(config.ErrCreatingUser, config.ErrInvalidPassword)
 	}
 
-	hash, hashErr := encrypter.PasswordEncrypter(user.Password)
-	if hashErr != nil {
-		return mysqlUser.User{}, hashErr
-	}
+	hash, _ := encrypter.PasswordEncrypter(user.Password)
 
 	user.ID = uID
 	user.Password = string(hash)
@@ -100,7 +97,9 @@ func (us *UserServices) ChangeUserPwd(ctx context.Context, newPwd, username stri
 		return apperror.AppError(config.ErrChangingPwd, config.ErrInvalidPassword)
 	}
 
-	if changePwdErr := us.Repo.ChangePwd(newPwd, username); changePwdErr != nil {
+	hash, _ := encrypter.PasswordEncrypter(newPwd)
+
+	if changePwdErr := us.Repo.ChangePwd(string(hash), username); changePwdErr != nil {
 		return apperror.AppError(config.ErrChangingPwd, changePwdErr)
 	}
 

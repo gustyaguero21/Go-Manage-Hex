@@ -26,7 +26,7 @@ func (uh *UserHandler) SearchUserHandler(c *gin.Context) {
 	username := c.Query("username")
 
 	if username == "" {
-		web.NewError(c, http.StatusBadRequest, config.ErrInvalidQueryParam)
+		web.NewError(c, http.StatusBadRequest, config.InvalidQueryParamsMsg)
 		return
 	}
 
@@ -91,6 +91,57 @@ func (uh *UserHandler) DeleteUserHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, userResponse(http.StatusOK, config.UserDeletedMsg, nil))
+}
+
+func (uh *UserHandler) UpdateUserHandler(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
+
+	username := c.Query("username")
+	if username == "" {
+		web.NewError(c, http.StatusBadRequest, config.InvalidQueryParamsMsg)
+		return
+	}
+
+	var user entity.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		web.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if user.Name == "" || user.LastName == "" || user.Email == "" {
+		web.NewError(c, http.StatusBadRequest, config.InvalidBodyMsg)
+		return
+	}
+
+	_, updateErr := uh.Service.UpdateUser(c, username, user)
+	if updateErr != nil {
+		web.NewError(c, http.StatusInternalServerError, updateErr.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, userResponse(http.StatusOK, config.UserUpdatedMsg, nil))
+
+}
+
+func (uh *UserHandler) ChangePwdHandler(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
+
+	username := c.Query("username")
+	newPwd := c.Query("newPwd")
+
+	if username == "" || newPwd == "" {
+		web.NewError(c, http.StatusBadRequest, config.InvalidQueryParamsMsg)
+		return
+	}
+
+	changePwdErr := uh.Service.ChangeUserPwd(c, newPwd, username)
+	if changePwdErr != nil {
+		web.NewError(c, http.StatusInternalServerError, changePwdErr.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, userResponse(http.StatusOK, config.UserPwdChangeMsg, nil))
 }
 
 func userResponse(status int, message string, data interface{}) *entity.UserResponse {
