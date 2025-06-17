@@ -29,13 +29,14 @@ var (
 //handler messages
 
 const (
-	UserCreatedMsg         = "user found successfully"
-	UserFoundMsg           = "user found successfully"
-	InvalidBodyMsg         = "invalid body params"
-	InvalidQueryParamsMsg  = "invalid query params"
-	InvalidConfirmationMsg = "invalid confirmation value"
-	DeleteCancelledMsg     = "delete operation canceled"
-	UserDeletedMsg         = "user deleted successfully"
-	UserUpdatedMsg         = "user updated succesfully"
-	UserPwdChangeMsg       = "password changed successfully"
+	UserCreatedMsg           = "user created successfully"
+	UserFoundMsg             = "user found successfully"
+	InvalidBodyMsg           = "invalid body params"
+	InvalidQueryParamsMsg    = "invalid query params"
+	InvalidConfirmationMsg   = "delete operation canceled"
+	InvalidConfirmationValue = "invalid confirmation value"
+	DeleteCancelledMsg       = "delete operation canceled"
+	UserDeletedMsg           = "user deleted successfully"
+	UserUpdatedMsg           = "user updated succesfully"
+	UserPwdChangeMsg         = "password changed successfully"
 )
