@@ -8,3 +8,9 @@ type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type UserResponse struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
+}

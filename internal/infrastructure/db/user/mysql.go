@@ -20,17 +20,17 @@ func (um *UserMysql) CreateTable(tableName string) error {
 
 	_, err := um.DB.Exec(query)
 	if err != nil {
-		return fmt.Errorf("error creating table. Error: %s", err)
+		return err
 	}
 	return nil
 }
 
-func (um *UserMysql) GetByName(name string) (mysqlrepo.User, error) {
-	query := fmt.Sprintf(config.GetByNameQuery, config.GetMysqlTable())
+func (um *UserMysql) GetByUsername(username string) (mysqlrepo.User, error) {
+	query := fmt.Sprintf(config.GetByUsernameQuery, config.GetMysqlTable())
 
 	var user mysqlrepo.User
 
-	err := um.DB.QueryRow(query, name).Scan(
+	err := um.DB.QueryRow(query, username).Scan(
 		&user.ID,
 		&user.Name,
 		&user.LastName,
@@ -39,11 +39,8 @@ func (um *UserMysql) GetByName(name string) (mysqlrepo.User, error) {
 		&user.Password,
 	)
 
-	if err == sql.ErrNoRows {
-		return mysqlrepo.User{}, sql.ErrNoRows
-	}
 	if err != nil {
-		return mysqlrepo.User{}, err
+		return mysqlrepo.User{}, config.ErrUserNotFound
 	}
 
 	return user, nil
@@ -51,28 +48,49 @@ func (um *UserMysql) GetByName(name string) (mysqlrepo.User, error) {
 
 func (um *UserMysql) NewUser(user mysqlrepo.User) error {
 	query := fmt.Sprintf(config.NewUserQuery, config.GetMysqlTable())
+
 	_, err := um.DB.Exec(query, user.ID, user.Name, user.LastName, user.Username, user.Email, user.Password)
 	if err != nil {
-		return fmt.Errorf("error creating user. Error: %s", err)
+		return err
 	}
 	return nil
 }
 
-func (um *UserMysql) DeleteUser(name string) error {
+func (um *UserMysql) DeleteUser(username string) error {
 	query := fmt.Sprintf(config.DeleteQuery, config.GetMysqlTable())
-	_, err := um.DB.Exec(query, name)
+
+	_, err := um.DB.Exec(query, username)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (um *UserMysql) UpdateUser(name string, user mysqlrepo.User) error {
+func (um *UserMysql) UpdateUser(username string, user mysqlrepo.User) error {
 	query := fmt.Sprintf(config.UpdateQuery, config.GetMysqlTable())
 
-	_, err := um.DB.Exec(query, user.Name, user.LastName, user.Email, name)
+	_, err := um.DB.Exec(query, user.Name, user.LastName, user.Email, username)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (um *UserMysql) ChangePwd(newPwd, username string) error {
+	query := fmt.Sprintf(config.ChangePwdQuery, config.GetMysqlTable())
+
+	_, err := um.DB.Exec(query, newPwd, username)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (um *UserMysql) CheckExists(username string) bool {
+	query := fmt.Sprintf(config.CheckExistsQuery, config.GetMysqlTable())
+
+	var exists string
+
+	return um.DB.QueryRow(query, username).Scan(&exists) == nil
+
 }

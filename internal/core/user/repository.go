@@ -2,8 +2,10 @@ package user
 
 type MysqlRepository interface {
 	CreateTable(tableName string) error
-	GetByName(name string) (User, error)
+	GetByUsername(username string) (User, error)
+	CheckExists(username string) bool
 	NewUser(user User) error
-	DeleteUser(name string) error
-	UpdateUser(name string, user User) error
+	DeleteUser(username string) error
+	UpdateUser(username string, user User) error
+	ChangePwd(newPwd, username string) error
 }
