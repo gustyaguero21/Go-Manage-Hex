@@ -2,11 +2,13 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-manage-hex/cmd/config"
 	entity "go-manage-hex/internal/core/user"
 	"testing"
 
+	"github.com/gustyaguero21/go-core/pkg/encrypter"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +20,7 @@ type mockMysqlRepository struct {
 	DeleteUserFn    func(username string) error
 	UpdateUserFn    func(username string, user entity.User) error
 	ChangePwdFn     func(newPwd, username string) error
+	LoginFn         func(username, password string) error
 }
 
 func (m *mockMysqlRepository) CreateTable(tableName string) error {
@@ -65,6 +68,13 @@ func (m *mockMysqlRepository) UpdateUser(username string, user entity.User) erro
 func (m *mockMysqlRepository) ChangePwd(newPwd, username string) error {
 	if m.ChangePwdFn != nil {
 		return m.ChangePwdFn(newPwd, username)
+	}
+	return nil
+}
+
+func (m *mockMysqlRepository) Login(username, password string) error {
+	if m.LoginFn != nil {
+		return m.LoginFn(username, password)
 	}
 	return nil
 }
@@ -391,6 +401,82 @@ func TestChangeUserPwd(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
+		})
+	}
+}
+
+func TestLogin(t *testing.T) {
+	test := []struct {
+		Name        string
+		Username    string
+		Password    string
+		User        entity.User
+		ExpectedErr error
+		MockFunc    func()
+	}{
+		{
+			Name:     "Login_Success",
+			Username: "johndoe",
+			Password: "Password12345",
+			User: func() entity.User {
+				encrypted, _ := encrypter.PasswordEncrypter("Password12345")
+				return entity.User{
+					Username: "johndoe",
+					Password: string(encrypted),
+				}
+			}(),
+			ExpectedErr: nil,
+		},
+		{
+			Name:     "Login_Err",
+			Username: "johndoe",
+			Password: "Password12345",
+			User: func() entity.User {
+				encrypted, _ := encrypter.PasswordEncrypter("Password12345")
+				return entity.User{
+					Username: "johndoe",
+					Password: string(encrypted),
+				}
+			}(),
+			ExpectedErr: errors.New("user not found"),
+		},
+		{
+			Name:     "Login_Wrong_Password",
+			Username: "johndoe",
+			Password: "Password12",
+			User: func() entity.User {
+				encrypted, _ := encrypter.PasswordEncrypter("Password12345")
+				return entity.User{
+					Username: "johndoe",
+					Password: string(encrypted),
+				}
+			}(),
+			ExpectedErr: errors.New("wrong_password"),
+		},
+	}
+
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			repo := mockMysqlRepository{
+				GetByUsernameFn: func(username string) (entity.User, error) {
+					if tt.Name == "Login_Err" {
+						return entity.User{}, tt.ExpectedErr
+					}
+					return tt.User, nil
+				},
+
+				LoginFn: func(username, password string) error {
+					return tt.ExpectedErr
+				},
+			}
+			service := NewUserService(&repo)
+
+			err := service.Login(context.Background(), tt.Username, tt.Password)
+			if err != nil {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

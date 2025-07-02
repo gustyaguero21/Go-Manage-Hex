@@ -32,6 +32,7 @@ const (
 	UserCreatedMsg           = "user created successfully"
 	UserFoundMsg             = "user found successfully"
 	InvalidBodyMsg           = "invalid body params"
+	EmptyBodyParamsMsg       = "empty body params"
 	InvalidQueryParamsMsg    = "invalid query params"
 	InvalidConfirmationMsg   = "delete operation canceled"
 	InvalidConfirmationValue = "invalid confirmation value"

@@ -44,6 +44,11 @@ func (m *MockUsecases) ChangeUserPwd(ctx context.Context, newPwd, username strin
 	return args.Error(0)
 }
 
+func (m *MockUsecases) Login(ctx context.Context, username, password string) error {
+	args := m.Called(ctx, username, password)
+	return args.Error(0)
+}
+
 func TestSearchUserHandler(t *testing.T) {
 	mockUsecase := new(MockUsecases)
 	handler := UserHandler{Service: mockUsecase}
