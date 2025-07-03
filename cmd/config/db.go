@@ -16,13 +16,14 @@ var (
 )
 
 const (
-	CreateTableQuery   = "CREATE TABLE IF NOT EXISTS %s (id VARCHAR(36) UNIQUE NOT NULL PRIMARY KEY, name VARCHAR(36) NOT NULL, last_name VARCHAR(36) NOT NULL, username VARCHAR(36) UNIQUE NOT NULL, email VARCHAR(36) UNIQUE NOT NULL, password VARCHAR(100) NOT NULL)"
-	CheckExistsQuery   = "SELECT 1 FROM %s WHERE username = ? LIMIT 1"
-	GetByUsernameQuery = "SELECT id,name,last_name,username,email,password FROM %s WHERE username = ?"
-	NewUserQuery       = "INSERT INTO %s (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
-	DeleteQuery        = "DELETE FROM %s WHERE username = ?"
-	UpdateQuery        = "UPDATE %s SET name = ?, last_name = ?, email = ? WHERE username = ?"
-	ChangePwdQuery     = "UPDATE %s SET password = ? WHERE username = ?"
+	CreateTableQuery      = "CREATE TABLE IF NOT EXISTS %s (id VARCHAR(36) UNIQUE NOT NULL PRIMARY KEY, name VARCHAR(36) NOT NULL, last_name VARCHAR(36) NOT NULL, username VARCHAR(36) UNIQUE NOT NULL, email VARCHAR(36) UNIQUE NOT NULL, password VARCHAR(100) NOT NULL)"
+	CheckExistsQuery      = "SELECT 1 FROM %s WHERE username = ? LIMIT 1"
+	GetByUsernameQuery    = "SELECT id,name,last_name,username,email,password FROM %s WHERE username = ?"
+	NewUserQuery          = "INSERT INTO %s (id,name,last_name,username,email,password) VALUES (?,?,?,?,?,?)"
+	DeleteQuery           = "DELETE FROM %s WHERE username = ?"
+	UpdateQuery           = "UPDATE %s SET name = ?, last_name = ?, email = ? WHERE username = ?"
+	ChangePwdQuery        = "UPDATE %s SET password = ? WHERE username = ?"
+	GetByCredentialsQuery = "SELECT 1 FROM %s WHERE username = ? AND password = ? LIMIT 1"
 )
 
 // mysql test queries

@@ -11,4 +11,5 @@ type Usecases interface {
 	DeleteUser(ctx context.Context, username string) error
 	UpdateUser(ctx context.Context, username string, user mysqlUser.User) (updated mysqlUser.User, err error)
 	ChangeUserPwd(ctx context.Context, newPwd, username string) error
+	Login(ctx context.Context, username, password string) error
 }

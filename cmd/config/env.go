@@ -50,3 +50,7 @@ func GetDSN_DB() string {
 
 	return dsn
 }
+
+func GetJwtSecret() string {
+	return os.Getenv("JWT_TOKEN_SECRET")
+}

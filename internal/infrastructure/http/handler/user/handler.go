@@ -13,11 +13,14 @@ import (
 )
 
 type UserHandler struct {
-	Service user.Usecases
+	Service     user.Usecases
+	AuthService entity.Authorization
 }
 
-func NewUserHandler(service user.Usecases) *UserHandler {
-	return &UserHandler{Service: service}
+func NewUserHandler(service user.Usecases, auth entity.Authorization) *UserHandler {
+	return &UserHandler{
+		Service:     service,
+		AuthService: auth}
 }
 
 func (uh *UserHandler) SearchUserHandler(c *gin.Context) {
@@ -142,6 +145,35 @@ func (uh *UserHandler) ChangePwdHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, userResponse(http.StatusOK, config.UserPwdChangeMsg, nil))
+}
+
+func (uh *UserHandler) LoginUser(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
+
+	var user entity.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		web.NewError(c, http.StatusBadRequest, config.InvalidBodyMsg)
+		return
+	}
+
+	if user.Username == "" || user.Password == "" {
+		web.NewError(c, http.StatusBadRequest, config.EmptyBodyParamsMsg)
+		return
+	}
+
+	if loginErr := uh.Service.Login(c, user.Username, user.Password); loginErr != nil {
+		web.NewError(c, http.StatusUnauthorized, "invalid credentials")
+		return
+	}
+
+	token, err := uh.AuthService.GenerateJWT(user.Username, user.Password)
+	if err != nil {
+		web.NewError(c, http.StatusInternalServerError, "error generating token")
+		return
+	}
+
+	c.JSON(http.StatusOK, userResponse(http.StatusOK, "user logged", token))
 }
 
 func userResponse(status int, message string, data interface{}) *entity.UserResponse {

@@ -2,14 +2,16 @@ package server
 
 import (
 	"go-manage-hex/cmd/config"
+	"go-manage-hex/internal/infrastructure/auth"
 	"go-manage-hex/internal/infrastructure/db"
+	"time"
 
 	"log"
-	"net/http"
 
 	service "go-manage-hex/internal/app/user"
 	repository "go-manage-hex/internal/infrastructure/db/user"
 	handler "go-manage-hex/internal/infrastructure/http/handler/user"
+	middleware "go-manage-hex/internal/infrastructure/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,24 +28,25 @@ func UrlMapping(s *gin.Engine) {
 
 	userService := service.NewUserService(userRepo)
 
-	userHandler := handler.NewUserHandler(userService)
+	authService := auth.NewJWTService(config.GetJwtSecret(), time.Hour*1)
+	middleware := middleware.NewMiddleware(authService)
+
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	api := s.Group(config.BaseURL)
 
-	api.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-
-	api.GET("/search", userHandler.SearchUserHandler)
-
 	api.POST("/create", userHandler.CreateUserHandler)
+	api.POST("/login", userHandler.LoginUser)
 
-	api.DELETE("/delete", userHandler.DeleteUserHandler)
+	protected := api.Group("/")
+	protected.Use(middleware.RequireAuth)
 
-	api.PATCH("/update", userHandler.UpdateUserHandler)
+	protected.GET("/search", userHandler.SearchUserHandler)
 
-	api.PATCH("/change-password", userHandler.ChangePwdHandler)
+	protected.DELETE("/delete", userHandler.DeleteUserHandler)
+
+	protected.PATCH("/update", userHandler.UpdateUserHandler)
+
+	protected.PATCH("/change-password", userHandler.ChangePwdHandler)
 
 }
