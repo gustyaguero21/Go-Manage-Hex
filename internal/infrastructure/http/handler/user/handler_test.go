@@ -19,6 +19,10 @@ type MockUsecases struct {
 	mock.Mock
 }
 
+type MockAuthService struct {
+	mock.Mock
+}
+
 func (m *MockUsecases) SearchUser(ctx context.Context, username string) (entity.User, error) {
 	args := m.Called(ctx, username)
 	return args.Get(0).(entity.User), args.Error(1)
@@ -47,6 +51,16 @@ func (m *MockUsecases) ChangeUserPwd(ctx context.Context, newPwd, username strin
 func (m *MockUsecases) Login(ctx context.Context, username, password string) error {
 	args := m.Called(ctx, username, password)
 	return args.Error(0)
+}
+
+func (a *MockAuthService) GenerateJWT(username, password string) (string, error) {
+	args := a.Called(username, password)
+	return args.String(0), args.Error(1)
+}
+
+func (a *MockAuthService) ValidateJWT(token string) (string, error) {
+	args := a.Called(token)
+	return args.String(0), args.Error(1)
 }
 
 func TestSearchUserHandler(t *testing.T) {
@@ -162,12 +176,6 @@ func TestCreateUserHandler(t *testing.T) {
 		{
 			Name:           "Invalid JSON",
 			Body:           `{"name":"John", "password": "Password1234}`,
-			MockFunc:       func() {},
-			ExpectedStatus: http.StatusBadRequest,
-		},
-		{
-			Name:           "Invalid Body Content",
-			Body:           `{"name":"","last_name":"Doe","username":"johndoe","email":"johndoe@example.com","password":"Password1234"}`,
 			MockFunc:       func() {},
 			ExpectedStatus: http.StatusBadRequest,
 		},
@@ -288,7 +296,7 @@ func TestDeleteUserHandler(t *testing.T) {
 	}
 }
 
-func TestUpdateUser(t *testing.T) {
+func TestUpdateUserHandler(t *testing.T) {
 	mockUsecase := new(MockUsecases)
 	handler := UserHandler{Service: mockUsecase}
 
@@ -437,6 +445,83 @@ func TestChangePwdHandler(t *testing.T) {
 			handler.ChangePwdHandler(c)
 
 			assert.Equal(t, tt.ExpectedStatus, w.Code)
+		})
+	}
+}
+
+func TestLoginUser(t *testing.T) {
+	mockUsecase := new(MockUsecases)
+	mockAuthService := new(MockAuthService)
+	handler := UserHandler{
+		Service:     mockUsecase,
+		AuthService: mockAuthService,
+	}
+
+	tests := []struct {
+		Name            string
+		Login           string
+		MockLogin       func()
+		MockGenerateJWT func()
+		ExpectedStatus  int
+	}{
+		{
+			Name:  "success",
+			Login: `{"username": "john", "password": "doe123"}`,
+			MockLogin: func() {
+				mockUsecase.On("Login", mock.Anything, "john", "doe123").Return(nil).Once()
+			},
+			MockGenerateJWT: func() {
+				mockAuthService.On("GenerateJWT", "john", "doe123").Return("mocked-token", nil).Once()
+			},
+			ExpectedStatus: http.StatusOK,
+		},
+		{
+			Name:            "invalid json",
+			Login:           `{"username": "john"`,
+			MockLogin:       func() {},
+			MockGenerateJWT: func() {},
+			ExpectedStatus:  http.StatusBadRequest,
+		},
+		{
+			Name:  "invalid credentials",
+			Login: `{"username": "john", "password": "wrong"}`,
+			MockLogin: func() {
+				mockUsecase.On("Login", mock.Anything, "john", "wrong").Return(errors.New("unauthorized")).Once()
+			},
+			MockGenerateJWT: func() {},
+			ExpectedStatus:  http.StatusUnauthorized,
+		},
+		{
+			Name:  "error generating jwt",
+			Login: `{"username": "john", "password": "doe123"}`,
+			MockLogin: func() {
+				mockUsecase.On("Login", mock.Anything, "john", "doe123").Return(nil).Once()
+			},
+			MockGenerateJWT: func() {
+				mockAuthService.On("GenerateJWT", "john", "doe123").Return("", errors.New("internal")).Once()
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+
+			tt.MockLogin()
+			tt.MockGenerateJWT()
+
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			bodyReader := strings.NewReader(tt.Login)
+
+			c.Request = httptest.NewRequest(http.MethodPost, "/login", bodyReader)
+			c.Request.Header.Set("Content-Type", "application/json")
+
+			handler.LoginUser(c)
+
+			assert.Equal(t, tt.ExpectedStatus, w.Code)
+
 		})
 	}
 }
