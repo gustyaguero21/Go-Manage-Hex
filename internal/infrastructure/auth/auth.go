@@ -41,17 +41,17 @@ func (j *JWTService) GenerateJWT(username, password string) (string, error) {
 func (j *JWTService) ValidateJWT(tokenStr string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &claim.Claims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("método de firma inválido")
+			return nil, fmt.Errorf("invalid token sign")
 		}
 		return []byte(j.SecretKey), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("token inválido: %w", err)
+		return "", fmt.Errorf("invalid token: %w", err)
 	}
 
 	claims, ok := token.Claims.(*claim.Claims)
 	if !ok || !token.Valid {
-		return "", fmt.Errorf("token inválido")
+		return "", fmt.Errorf("invalid token")
 	}
 
 	return claims.Username, nil
