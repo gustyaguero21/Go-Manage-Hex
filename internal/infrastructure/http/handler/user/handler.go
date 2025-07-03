@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	entity "go-manage-hex/internal/core/user"
+	dto "go-manage-hex/internal/infrastructure/http/dto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gustyaguero21/go-core/pkg/web"
@@ -20,7 +21,8 @@ type UserHandler struct {
 func NewUserHandler(service user.Usecases, auth entity.Authorization) *UserHandler {
 	return &UserHandler{
 		Service:     service,
-		AuthService: auth}
+		AuthService: auth,
+	}
 }
 
 func (uh *UserHandler) SearchUserHandler(c *gin.Context) {
@@ -49,11 +51,6 @@ func (uh *UserHandler) CreateUserHandler(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		web.NewError(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	if user.Name == "" || user.LastName == "" || user.Username == "" || user.Email == "" || user.Password == "" {
-		web.NewError(c, http.StatusBadRequest, config.InvalidBodyMsg)
 		return
 	}
 
@@ -105,16 +102,17 @@ func (uh *UserHandler) UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
-	var user entity.User
+	var dto dto.UpdateDTO
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		web.NewError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if user.Name == "" || user.LastName == "" || user.Email == "" {
-		web.NewError(c, http.StatusBadRequest, config.InvalidBodyMsg)
-		return
+	user := entity.User{
+		Name:     dto.Name,
+		LastName: dto.LastName,
+		Email:    dto.Email,
 	}
 
 	_, updateErr := uh.Service.UpdateUser(c, username, user)
@@ -150,16 +148,16 @@ func (uh *UserHandler) ChangePwdHandler(c *gin.Context) {
 func (uh *UserHandler) LoginUser(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 
-	var user entity.User
+	var dto dto.LoginRequestDTO
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		web.NewError(c, http.StatusBadRequest, config.InvalidBodyMsg)
 		return
 	}
 
-	if user.Username == "" || user.Password == "" {
-		web.NewError(c, http.StatusBadRequest, config.EmptyBodyParamsMsg)
-		return
+	user := entity.User{
+		Username: dto.Username,
+		Password: dto.Password,
 	}
 
 	if loginErr := uh.Service.Login(c, user.Username, user.Password); loginErr != nil {
@@ -176,8 +174,8 @@ func (uh *UserHandler) LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, userResponse(http.StatusOK, "user logged", token))
 }
 
-func userResponse(status int, message string, data interface{}) *entity.UserResponse {
-	return &entity.UserResponse{
+func userResponse(status int, message string, data interface{}) *dto.UserResponseDTO {
+	return &dto.UserResponseDTO{
 		Status:  status,
 		Message: message,
 		Data:    data,

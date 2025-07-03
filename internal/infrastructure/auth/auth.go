@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	entity "go-manage-hex/internal/core/user"
+	claim "go-manage-hex/internal/infrastructure/http/middleware"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -24,9 +24,9 @@ func NewJWTService(secret string, duration time.Duration) *JWTService {
 func (j *JWTService) GenerateJWT(username, password string) (string, error) {
 	now := time.Now()
 
-	claims := entity.Claims{
+	claims := claim.Claims{
 		Username: username,
-		Password: password, // aunque usualmente no conviene poner password en el JWT!
+		Password: password,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.Duration)),
@@ -35,11 +35,11 @@ func (j *JWTService) GenerateJWT(username, password string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(j.SecretKey)) // usar j.SecretKey, no jwtKey global
+	return token.SignedString([]byte(j.SecretKey))
 }
 
 func (j *JWTService) ValidateJWT(tokenStr string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &entity.Claims{}, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &claim.Claims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("método de firma inválido")
 		}
@@ -49,7 +49,7 @@ func (j *JWTService) ValidateJWT(tokenStr string) (string, error) {
 		return "", fmt.Errorf("token inválido: %w", err)
 	}
 
-	claims, ok := token.Claims.(*entity.Claims)
+	claims, ok := token.Claims.(*claim.Claims)
 	if !ok || !token.Valid {
 		return "", fmt.Errorf("token inválido")
 	}

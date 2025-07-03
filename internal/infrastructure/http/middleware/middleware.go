@@ -36,7 +36,7 @@ func (m *Middleware) RequireAuth(c *gin.Context) {
 
 	username, err := m.AuthService.ValidateJWT(tokenString)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token: " + err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 		c.Abort()
 		return
 	}
