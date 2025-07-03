@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 
 	"go-manage-hex/cmd/config"
 	mysqlUser "go-manage-hex/internal/core/user"
@@ -101,6 +102,21 @@ func (us *UserServices) ChangeUserPwd(ctx context.Context, newPwd, username stri
 
 	if changePwdErr := us.Repo.ChangePwd(string(hash), username); changePwdErr != nil {
 		return apperror.AppError(config.ErrChangingPwd, changePwdErr)
+	}
+
+	return nil
+}
+
+func (us *UserServices) Login(ctx context.Context, username, password string) error {
+	user, err := us.Repo.GetByUsername(username)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	decrypt := encrypter.PasswordDecrypter([]byte(user.Password), password)
+
+	if !decrypt {
+		return errors.New("wrong password")
 	}
 
 	return nil
