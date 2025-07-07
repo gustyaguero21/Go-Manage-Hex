@@ -21,12 +21,11 @@ func NewJWTService(secret string, duration time.Duration) *JWTService {
 	}
 }
 
-func (j *JWTService) GenerateJWT(username, password string) (string, error) {
+func (j *JWTService) GenerateJWT(username string) (string, error) {
 	now := time.Now()
 
 	claims := claim.Claims{
 		Username: username,
-		Password: password,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.Duration)),

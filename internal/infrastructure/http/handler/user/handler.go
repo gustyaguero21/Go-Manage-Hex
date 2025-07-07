@@ -128,15 +128,14 @@ func (uh *UserHandler) UpdateUserHandler(c *gin.Context) {
 func (uh *UserHandler) ChangePwdHandler(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 
-	username := c.Query("username")
-	newPwd := c.Query("newPwd")
+	dto := dto.ChangePwdDTO{}
 
-	if username == "" || newPwd == "" {
-		web.NewError(c, http.StatusBadRequest, config.InvalidQueryParamsMsg)
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		web.NewError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	changePwdErr := uh.Service.ChangeUserPwd(c, newPwd, username)
+	changePwdErr := uh.Service.ChangeUserPwd(c, dto.NewPwd, dto.Username)
 	if changePwdErr != nil {
 		web.NewError(c, http.StatusInternalServerError, changePwdErr.Error())
 		return
@@ -165,7 +164,7 @@ func (uh *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	token, err := uh.AuthService.GenerateJWT(user.Username, user.Password)
+	token, err := uh.AuthService.GenerateJWT(user.Username)
 	if err != nil {
 		web.NewError(c, http.StatusInternalServerError, "error generating token")
 		return
