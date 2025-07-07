@@ -53,8 +53,8 @@ func (m *MockUsecases) Login(ctx context.Context, username, password string) err
 	return args.Error(0)
 }
 
-func (a *MockAuthService) GenerateJWT(username, password string) (string, error) {
-	args := a.Called(username, password)
+func (a *MockAuthService) GenerateJWT(username string) (string, error) {
+	args := a.Called(username)
 	return args.String(0), args.Error(1)
 }
 
@@ -391,39 +391,34 @@ func TestChangePwdHandler(t *testing.T) {
 
 	tests := []struct {
 		Name           string
-		Username       string
-		NewPwd         string
+		Body           string
 		MockFunc       func()
 		ExpectedStatus int
 	}{
 		{
-			Name:     "Success",
-			Username: "johndoe",
-			NewPwd:   "NewPassword1234",
+			Name: "Success",
+			Body: `{"username":"johndoe","new_pwd":"newpassword"}`,
 			MockFunc: func() {
 				mockUsecase.
-					On("ChangeUserPwd", mock.Anything, "NewPassword1234", "johndoe").
+					On("ChangeUserPwd", mock.Anything, "newpassword", "johndoe").
 					Return(nil).
 					Once()
 			},
 			ExpectedStatus: http.StatusOK,
 		},
 		{
-			Name:     "Invalid Query Params",
-			Username: "",
-			NewPwd:   "",
-			MockFunc: func() {
-			},
+			Name:           "Invalid JSON Body",
+			Body:           `{"username":"",`,
+			MockFunc:       func() {},
 			ExpectedStatus: http.StatusBadRequest,
 		},
 		{
-			Name:     "Error",
-			Username: "johndoe",
-			NewPwd:   "NewPassword1234",
+			Name: "Error",
+			Body: `{"username":"johndoe","new_pwd":"newpassword"}`,
 			MockFunc: func() {
 				mockUsecase.
-					On("ChangeUserPwd", mock.Anything, "NewPassword1234", "johndoe").
-					Return(fmt.Errorf("error changing user password")).
+					On("ChangeUserPwd", mock.Anything, mock.Anything, mock.Anything).
+					Return(fmt.Errorf("error changing password")).
 					Once()
 			},
 			ExpectedStatus: http.StatusInternalServerError,
@@ -432,14 +427,13 @@ func TestChangePwdHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
+
 			tt.MockFunc()
 
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 
-			reqURL := fmt.Sprintf("/change-password?username=%s&newPwd=%s", tt.Username, tt.NewPwd)
-
-			c.Request = httptest.NewRequest(http.MethodPatch, reqURL, nil)
+			c.Request = httptest.NewRequest(http.MethodPatch, "/change-password", strings.NewReader(tt.Body))
 			c.Request.Header.Set("Content-Type", "application/json")
 
 			handler.ChangePwdHandler(c)
@@ -471,7 +465,7 @@ func TestLoginUser(t *testing.T) {
 				mockUsecase.On("Login", mock.Anything, "john", "doe123").Return(nil).Once()
 			},
 			MockGenerateJWT: func() {
-				mockAuthService.On("GenerateJWT", "john", "doe123").Return("mocked-token", nil).Once()
+				mockAuthService.On("GenerateJWT", "john").Return("mocked-token", nil).Once()
 			},
 			ExpectedStatus: http.StatusOK,
 		},
@@ -498,7 +492,7 @@ func TestLoginUser(t *testing.T) {
 				mockUsecase.On("Login", mock.Anything, "john", "doe123").Return(nil).Once()
 			},
 			MockGenerateJWT: func() {
-				mockAuthService.On("GenerateJWT", "john", "doe123").Return("", errors.New("internal")).Once()
+				mockAuthService.On("GenerateJWT", "john").Return("", errors.New("internal")).Once()
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},

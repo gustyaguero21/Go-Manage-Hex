@@ -15,6 +15,11 @@ type UpdateDTO struct {
 	Email    string `json:"email" binding:"required"`
 }
 
+type ChangePwdDTO struct {
+	Username string `json:"username" binding:"required"`
+	NewPwd   string `json:"new_pwd" binding:"required"`
+}
+
 type LoginRequestDTO struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`

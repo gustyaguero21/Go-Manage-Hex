@@ -15,8 +15,8 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (a *MockAuthService) GenerateJWT(username, password string) (string, error) {
-	args := a.Called(username, password)
+func (a *MockAuthService) GenerateJWT(username string) (string, error) {
+	args := a.Called(username)
 	return args.String(0), args.Error(1)
 }
 
